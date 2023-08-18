@@ -1,0 +1,560 @@
+package modelo;
+
+public class Usuario {
+    private int id;
+    private String nombre;
+    private String apellido;
+    private String usuario;
+    private String password;
+    private String correo;
+    /*
+    1 - administrados
+    2 - cliente
+    */
+    private int tipo;
+    private boolean estado;
+
+    public Usuario() {
+    }
+
+    public Usuario(int id, String nombre, String apellido, String usuario, String password, String correo, int tipo, boolean estado) {
+        this.id = id;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.usuario = usuario;
+        this.password = password;
+        this.correo = correo;
+        this.tipo = tipo;
+        this.estado = estado;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getApellido() {
+        return apellido;
+    }
+
+    public void setApellido(String apellido) {
+        this.apellido = apellido;
+    }
+
+    public String getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(String usuario) {
+        this.usuario = usuario;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getCorreo() {
+        return correo;
+    }
+
+    public void setCorreo(String correo) {
+        this.correo = correo;
+    }
+
+    public int getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(int tipo) {
+        this.tipo = tipo;
+    }
+
+    public boolean isEstado() {
+        return estado;
+    }
+
+    public void setEstado(boolean estado) {
+        this.estado = estado;
+    }
+
+    @Override
+    public String toString() {
+        return "Usuario{" + "id=" + id + ", nombre=" + nombre + ", apellido=" + apellido + ", usuario=" + usuario + ", password=" + password + ", correo=" + correo + ", tipo=" + tipo + ", estado=" + estado + '}';
+    }
+
+    
+    
+    
+    
+
+}
+
+
+package modelo;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Scanner;
+
+public class Sistema {
+    private List<Usuario>lista_Usuario;
+    private List<Evento>lista_Evento;
+    public Sistema() {
+        this.lista_Usuario = new LinkedList<Usuario>();
+        this.lista_Evento = new LinkedList<Evento>();
+    }
+
+    public List<Usuario> getListaUsuario() {
+        return lista_Usuario;
+    }
+
+    public void setListaUsuario(List<Usuario> listaUsuario) {
+        this.lista_Usuario = listaUsuario;
+    }
+
+    public List<Evento> getListaEvento() {
+        return lista_Evento;
+    }
+
+    public void setListaEvento(List<Evento> listaEvento) {
+        this.lista_Evento = listaEvento;
+    }
+    
+    public boolean agregarUsuario(String nombre, String apellido, String usuario, String password, String correo, int tipo){
+        int id = 1;
+        if(!this.lista_Usuario.isEmpty()){
+            id = this.lista_Usuario.get(this.lista_Usuario.size()-1).getId()+1;
+        }
+        return this.lista_Usuario.add(new Usuario(id, nombre, apellido, usuario, password, correo, tipo, true));
+    }
+    public boolean agregarEvento(String nombre, LocalTime hora, LocalDate dia){
+        int id = 1;
+        if(!this.lista_Evento.isEmpty()){
+            id = this.lista_Evento.get(this.lista_Evento.size()-1).getId()+1;
+        }
+        return this.lista_Evento.add(new Evento(id, nombre, hora, dia, true));
+    }
+    public Usuario traerUsuario(String usuario, String password){
+        Usuario nuevo = null;
+        
+        for(Usuario elem: this.lista_Usuario){
+            if(elem.getUsuario().equals(usuario) && elem.getPassword().equals(password) && elem.isEstado()){
+                nuevo = elem;
+            }
+        }
+        
+        return nuevo;
+    }
+    public Evento traerEvento(int id){
+        Evento nuevo = null;
+        for(Evento elem: this.lista_Evento){
+            if(elem.getId() == id){
+                nuevo = elem;
+            }
+        }
+        return nuevo;
+    }
+    public Evento traerEvento(String nombre){
+        Evento nuevo = null;
+        for(Evento elem: this.lista_Evento){
+            if(elem.getNombre().equals(nombre)){
+                nuevo = elem;
+            }
+        }
+        return nuevo;
+    }
+    public void eliminarEvento(int id){
+         Evento nuevo = traerEvento(id);
+        this.lista_Evento.remove(nuevo);
+    }
+    public void modificarEvento(int id, String nombre, LocalTime hora, LocalDate dia, boolean Activar){
+        Evento nuevo = traerEvento(id);
+        nuevo.setNombre(nombre);
+        nuevo.setHora(hora);
+        nuevo.setDia(dia);
+        nuevo.setActivar(Activar);
+    }
+    public boolean usuarioExiste(String usuario, String password){
+        boolean salida = false;
+        
+        for(Usuario elem: this.lista_Usuario){
+            if(elem.getUsuario().equals(usuario) && elem.getPassword().equals(password) && elem.isEstado()){
+                salida = true;
+            }
+        }
+        
+        return salida;
+    }
+   
+    public String mostrarReservas(int id){
+        String aux="";
+        for(Evento elem: this.lista_Evento){
+            if(elem.existeReserva(id)){
+                aux += elem.getNombre()+"\n";
+                for(Reserva elem2: elem.getListaReserva()){
+                    if(elem2.getIdUsuario() == id){
+                        aux += "asiento -> "+elem2.getAsiento()+"\n";
+                    }
+                }
+            }
+        }
+        return aux;
+    }
+    public void guardarTxtEventos(){
+        try{
+            BufferedWriter bf=new BufferedWriter(new FileWriter("eventos.txt"));
+            String aux="";
+            for(Evento elem: this.lista_Evento){
+                aux = elem.getId()+","+elem.getNombre()+","+elem.getHora().getHour()+","+elem.getHora().getMinute()+",";
+                aux += elem.getDia().toString()+","+elem.isActivar()+","+elem.getIdReserva()+",";
+                int tam = elem.getListaReserva().size();
+                aux += String.valueOf(tam);
+                for(Reserva item: elem.getListaReserva()){
+                    aux += ","+item.getId()+","+item.getAsiento()+","+item.getIdUsuario();
+                }
+                aux += "\n";
+                bf.write(aux);
+            }
+            bf.close();
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+    public void LeerTxtEventos(){
+            Scanner scanner;
+            File file = new File("eventos.txt");
+        try{
+            scanner = new Scanner(file);
+            while(scanner.hasNextLine()){
+                String linea = scanner.nextLine();
+                Scanner delimitar = new Scanner(linea);
+                delimitar.useDelimiter("\\s*,\\s*");
+                String id, nombre, hora, minuto, dia, activar, idReserva, tam;
+                int idReal, horaReal, minutoReal, idReservaReal, tamReal;
+                boolean activarReal;
+                
+                id = delimitar.next();
+                nombre = delimitar.next();
+                hora = delimitar.next();
+                minuto = delimitar.next();
+                dia = delimitar.next();
+                activar = delimitar.next();
+                idReserva = delimitar.next();
+                tam = delimitar.next();
+                
+                idReal = Integer.parseInt(id);
+                horaReal = Integer.parseInt(hora);
+                minutoReal = Integer.parseInt(minuto);
+                idReservaReal = Integer.parseInt(idReserva);
+                tamReal = Integer.parseInt(tam);
+                
+                if(activar.equals("0") || activar.equals("false")){
+                    activarReal=false;
+                }else{
+                    activarReal=true;
+                }
+                LocalTime horas = LocalTime.of(horaReal, minutoReal);
+                LocalDate dias = LocalDate.parse(dia);
+                Evento nuevo = new Evento(idReal, nombre, horas, dias, activarReal);
+                
+                for(int AA=0; AA<tamReal; AA++){
+                    String idReservas = delimitar.next();
+                    String asiento = delimitar.next();
+                    String idUsuario = delimitar.next();
+                    int idRes = Integer.parseInt(idReservas);
+                    int asi = Integer.parseInt(asiento);
+                    int idUsu = Integer.parseInt(idUsuario);
+                    nuevo.getListaReserva().add(new Reserva(idRes, asi, idUsu));
+                }
+                this.lista_Evento.add(nuevo);
+                
+                
+             
+                
+            }
+           
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+    public void guardarTxtUsuarios(){
+        try{
+            BufferedWriter bf=new BufferedWriter(new FileWriter("usuarios.txt"));
+            for(Usuario elem: this.lista_Usuario){
+                bf.write(elem.getId()+","+elem.getNombre()+","+elem.getApellido()+","+elem.getUsuario()+","+elem.getPassword()+","+elem.getCorreo()+","+elem.getTipo()+","+elem.isEstado()+"\n");
+            }
+            bf.close();
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+    public void LeerTxtUsuarios(){
+            Scanner scanner;
+            File file = new File("usuarios.txt");
+        try{
+            scanner = new Scanner(file);
+            while(scanner.hasNextLine()){
+                String linea = scanner.nextLine();
+                Scanner delimitar = new Scanner(linea);
+                delimitar.useDelimiter("\\s*,\\s*");
+                String id, nombre, apellido, usuario, password, correo, tipo, estado;
+                int idReal, tipoReal;
+                boolean estadoReal;
+                
+                id = delimitar.next();
+                nombre = delimitar.next();
+                apellido = delimitar.next();
+                usuario = delimitar.next();
+                password = delimitar.next();
+                correo = delimitar.next();
+                tipo = delimitar.next();
+                estado = delimitar.next();
+                
+                idReal = Integer.parseInt(id);
+                tipoReal = Integer.parseInt(id);
+                
+                if(estado.equals("0") || estado.equals("false")){
+                    estadoReal=false;
+                }else{
+                    estadoReal=true;
+                }
+                this.lista_Usuario.add(new Usuario(idReal, nombre, apellido, usuario, password, correo, tipoReal, estadoReal));
+             
+                
+            }
+           
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+    
+    
+}
+
+
+
+
+
+package modelo;
+
+public class Reserva {
+    private int id;
+    private int asiento;
+    private int idUsuario;
+
+    public Reserva(int id, int asiento, int idUsuario) {
+        this.id = id;
+        this.asiento = asiento;
+        this.idUsuario = idUsuario;
+    }
+
+    public Reserva() {
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getAsiento() {
+        return asiento;
+    }
+
+    public void setAsiento(int asiento) {
+        this.asiento = asiento;
+    }
+
+    public int getIdUsuario() {
+        return idUsuario;
+    }
+
+    public void setIdUsuario(int idUsuario) {
+        this.idUsuario = idUsuario;
+    }
+
+    @Override
+    public String toString() {
+        return "Reserva{" + "id=" + id + ", asiento=" + asiento + ", idUsuario=" + idUsuario + '}';
+    }
+    
+    
+    
+}
+
+
+
+
+package modelo;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Evento {
+    private int id;
+    private String nombre;
+    private LocalTime hora;
+    private LocalDate dia;
+    private boolean Activar;
+    private List<Reserva> lista_Reserva;
+    private int idReserva;
+
+    public Evento() {
+    }
+
+    public Evento(int id, String nombre, LocalTime hora, LocalDate dia, boolean Activar) {
+        this.id = id;
+        this.nombre = nombre;
+        this.hora = hora;
+        this.dia = dia;
+        this.Activar = Activar;
+        this.lista_Reserva = new ArrayList<Reserva>();
+        this.idReserva = 1;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public LocalTime getHora() {
+        return hora;
+    }
+
+    public void setHora(LocalTime hora) {
+        this.hora = hora;
+    }
+
+    public LocalDate getDia() {
+        return dia;
+    }
+
+    public void setDia(LocalDate dia) {
+        this.dia = dia;
+    }
+
+    public boolean isActivar() {
+        return Activar;
+    }
+
+    public void setActivar(boolean Activar) {
+        this.Activar = Activar;
+    }
+
+    public List<Reserva> getListaReserva() {
+        return lista_Reserva;
+    }
+
+    public void setListaReserva(List<Reserva> listaReserva) {
+        this.lista_Reserva = listaReserva;
+    }
+
+    public int getIdReserva() {
+        return idReserva;
+    }
+
+    public void setIdReserva(int idReserva) {
+        this.idReserva = idReserva;
+    }
+    
+     public void agregarReserva(int asiento, int idUsuario){
+        this.lista_Reserva.add(new Reserva(this.idReserva, asiento, idUsuario));
+        this.idReserva = this.idReserva + 1;
+    }
+     
+    public List<Integer>aseintosVacios(){
+        List<Integer>listaVacios = new ArrayList<Integer>();
+        boolean vacio;
+        for(int DM=1; DM<=35; DM++){
+            vacio = false;
+            for(Reserva elem: lista_Reserva){
+                if(elem.getAsiento() == DM){
+                    vacio = true;
+                }
+            }
+            if(!vacio){
+                listaVacios.add(DM);
+            }
+        }
+        return listaVacios;
+    }
+    
+    public boolean existeReserva(int id){
+        boolean existe = false;
+        for(Reserva elem: this.lista_Reserva){
+            if(elem.getIdUsuario() == id){
+                existe = true;
+            }
+        }
+        return existe;
+    }
+    public List<String> traerReservas(int id){
+        List<String>lista = new ArrayList<String>();
+        for(Reserva elem: this.lista_Reserva){
+            if(elem.getIdUsuario() == id){
+                lista.add(String.valueOf(elem.getAsiento()));
+            }
+        }
+        return lista;
+    }
+    public void eliminarReserva(String asiento){
+        int asien = Integer.parseInt(asiento);
+        Reserva reserva = null;
+        for(Reserva elem: this.lista_Reserva){
+            if(elem.getAsiento() == asien){
+                reserva = elem;
+            }
+        }
+        this.lista_Reserva.remove(reserva);
+    }
+
+    @Override
+    public String toString() {
+        return "Evento{" + "id=" + id + ", nombre=" + nombre + ", hora=" + hora + ", dia=" + dia + ", Activar=" + Activar + ", listaReserva=" + lista_Reserva + '}';
+    }
+
+    
+
+    
+   
+    
+    
+}
+
